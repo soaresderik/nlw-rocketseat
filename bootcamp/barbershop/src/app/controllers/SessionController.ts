@@ -1,0 +1,85 @@
+import Controller from "./Controller";
+import { Request, Response } from "express";
+import NotFoundException from "../exceptions/NotFoundException";
+import HttpException from "../exceptions/HttpException";
+
+import * as jwt from "jsonwebtoken";
+import * as wrapper from "express-async-handler";
+import User from "../../entity/User";
+import authConfig from "../config/auth.config";
+import authMiddleware from "../middlewares/auth.middleware";
+import { IRequest } from "../interfaces/custom.interfaces";
+import AuthorizationException from "../exceptions/AuthorizationException";
+import validationMiddleware from "../middlewares/validation.middleware";
+import UpdateUserDTO from "./dto/updataUser.dto";
+
+export default class SessionController extends Controller {
+  constructor() {
+    super();
+    this.path = "/sessions";
+
+    this.initializeRoutes();
+  }
+
+  private initializeRoutes() {
+    this.router.post(this.path, wrapper(this.store));
+    this.router.put(
+      this.path,
+      [authMiddleware, validationMiddleware(UpdateUserDTO, true)],
+      wrapper(this.update)
+    );
+  }
+
+  public store = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) throw new NotFoundException("User");
+
+    if (!(await user.checkPassword(password)))
+      throw new HttpException(401, "Não autorizado!");
+
+    const { id, name } = user;
+
+    return res.json({
+      user: {
+        id,
+        name,
+        email
+      },
+      token: await jwt.sign({ id }, authConfig.secret, {
+        expiresIn: authConfig.expires
+      })
+    });
+  };
+
+  public update = async (req: IRequest, res: Response) => {
+    const { email, oldPassword, password, name } = req.body;
+
+    const user = await User.findOne(req.user.id);
+
+    if (email !== user.email) {
+      const userExists = await User.findOne({ where: { email } });
+
+      if (userExists) throw new HttpException(400, "User already exists.");
+    }
+
+    console.log(oldPassword);
+    if (oldPassword && !(await user.checkPassword(oldPassword)))
+      throw new AuthorizationException("Password does not match");
+
+    if (password) user.password = await user.updatePassword(password);
+    user.name = name;
+    user.email = email;
+
+    const updated = await user.save();
+
+    res.json({
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      provider: updated.provider
+    });
+  };
+}

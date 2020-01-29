@@ -1,0 +1,9 @@
+
+[0] Docker
+    - Rodar uma imagem do potgres com o comando: 
+        docker run --name database -e PORTGRES_PASSWORD=docker -p 5432:5432 -d postgres:11
+    - Dentro do postgres criar uma nova base de dados com o nome gobarber.
+
+[1] Migraitions Sequelize
+    - Necessário instalar Sequelize ao projeto com: npm i sequelize e npm sequelize-cli -D
+    - instalar o pacote npm i pg pg-hstore
