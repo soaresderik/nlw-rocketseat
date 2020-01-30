@@ -11,7 +11,6 @@ async function authMiddleware(
   next: NextFunction
 ) {
   const token = req.headers.authorization;
-
   if (token)
     try {
       const decoded = jwt.verify(token, authConfig.secret);

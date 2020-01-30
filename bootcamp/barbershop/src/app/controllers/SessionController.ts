@@ -12,8 +12,12 @@ import { IRequest } from "../interfaces/custom.interfaces";
 import AuthorizationException from "../exceptions/AuthorizationException";
 import validationMiddleware from "../middlewares/validation.middleware";
 import UpdateUserDTO from "./dto/updataUser.dto";
+import File from "../../entity/File";
+import { UserRepository } from "../models/UserRepository";
 
 export default class SessionController extends Controller {
+  private userRepository = new UserRepository();
+
   constructor() {
     super();
     this.path = "/sessions";
@@ -55,8 +59,7 @@ export default class SessionController extends Controller {
   };
 
   public update = async (req: IRequest, res: Response) => {
-    const { email, oldPassword, password, name } = req.body;
-
+    const { email, oldPassword, password, name, avatarId } = req.body;
     const user = await User.findOne(req.user.id);
 
     if (email !== user.email) {
@@ -65,21 +68,31 @@ export default class SessionController extends Controller {
       if (userExists) throw new HttpException(400, "User already exists.");
     }
 
-    console.log(oldPassword);
     if (oldPassword && !(await user.checkPassword(oldPassword)))
       throw new AuthorizationException("Password does not match");
+
+    if (avatarId) {
+      user.avatar = null;
+      await user.save();
+      const avatar = await File.findOne(avatarId);
+
+      user.avatar = avatar;
+    }
 
     if (password) user.password = await user.updatePassword(password);
     user.name = name;
     user.email = email;
 
-    const updated = await user.save();
+    await user.save();
+
+    const updated = await this.userRepository.findOneUser(user.id);
 
     res.json({
       id: updated.id,
       name: updated.name,
       email: updated.email,
-      provider: updated.provider
+      provider: updated.provider,
+      avatar: updated.avatar || null
     });
   };
 }

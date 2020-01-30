@@ -5,11 +5,16 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BaseEntity,
-  BeforeInsert
+  BeforeInsert,
+  OneToOne,
+  OneToMany
 } from "typeorm";
 import * as bcrypt from "bcrypt";
+import { type } from "os";
+import File from "./File";
+import Appointment from "./Appointment";
 
-@Entity()
+@Entity("users")
 export default class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -31,6 +36,24 @@ export default class User extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToOne(
+    () => File,
+    file => file.user
+  )
+  avatar: File;
+
+  @OneToMany(
+    () => Appointment,
+    appointment => appointment.user
+  )
+  appointments: Appointment[];
+
+  @OneToMany(
+    () => Appointment,
+    appointment => appointment.user
+  )
+  providers: Appointment[];
 
   @BeforeInsert()
   private async hashPassword() {

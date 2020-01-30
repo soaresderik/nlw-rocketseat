@@ -1,5 +1,7 @@
 import "reflect-metadata";
 import * as express from "express";
+import * as path from "path";
+import * as mongoose from "mongoose";
 import HttpException from "./app/exceptions/HttpException";
 import Controller from "./app/controllers/Controller";
 
@@ -14,11 +16,13 @@ class App {
     this.middlewares();
     this.initializeControllers(controllers);
     this.errorMiddleware();
+    this.mongoConnect();
   }
 
   middlewares() {
     this.app.use(express.json());
     this.app.use(this.loggerMiddleware);
+    this.app.use("/files", express.static(path.resolve("tmp", "uploads")));
   }
 
   private initializeControllers(controllers: Controller[]) {
@@ -50,6 +54,14 @@ class App {
         res.status(status).json({ status, message });
       }
     );
+  }
+
+  private mongoConnect() {
+    mongoose.connect("mongodb://localhost:27017/gobarger", {
+      useNewUrlParser: true,
+      useFindAndModify: true,
+      useUnifiedTopology: true
+    });
   }
 
   public listen() {

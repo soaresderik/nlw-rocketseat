@@ -1,8 +1,12 @@
 import App from "./app";
 import { createConnection } from "typeorm";
-import User from "./entity/User";
+
 import UserController from "./app/controllers/UserController";
 import SessionController from "./app/controllers/SessionController";
+import FileController from "./app/controllers/FileController";
+import ProviderController from "./app/controllers/ProviderController";
+import AppointmentController from "./app/controllers/AppointmentController";
+import ScheduleController from "./app/controllers/ScheduleController";
 
 (async () => {
   try {
@@ -13,7 +17,7 @@ import SessionController from "./app/controllers/SessionController";
       username: "postgres",
       password: "example",
       database: "gobarber",
-      entities: [User],
+      entities: ["./src/entity**/*.ts"],
       synchronize: true,
       logging: false
     });
@@ -22,6 +26,16 @@ import SessionController from "./app/controllers/SessionController";
     return error;
   }
 
-  const app = new App([new UserController(), new SessionController()], 3333);
+  const app = new App(
+    [
+      new UserController(),
+      new SessionController(),
+      new FileController(),
+      new ProviderController(),
+      new AppointmentController(),
+      new ScheduleController()
+    ],
+    3333
+  );
   app.listen();
 })();
