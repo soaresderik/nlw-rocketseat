@@ -14,8 +14,8 @@ import { UserRepository } from "../models/UserRepository";
 import Notification from "../schemas/Notification";
 import Appointment from "../../entity/Appointment";
 import AuthorizationException from "../exceptions/AuthorizationException";
-
-import Mail from "../../lib/Mail";
+import CancelationMail from "../jobs/CancelationMail";
+import Queue from "../../lib/Queue";
 
 export default class AppointmentController extends Controller {
   constructor(
@@ -98,7 +98,7 @@ export default class AppointmentController extends Controller {
 
   public delete = async (req: IRequest, res: Response) => {
     const appointment = await Appointment.findOne(req.params.id, {
-      relations: ["provider"]
+      relations: ["provider", "user"]
     });
 
     if (appointment.userId !== req.user.id)
@@ -117,12 +117,12 @@ export default class AppointmentController extends Controller {
 
     await appointment.save();
 
-    await Mail.sendMail({
-      to: `${appointment.provider.name} <${appointment.provider.email}>`,
-      subject: "Angendamento Cancelado",
-      text: "Você tem um novo cancelamento"
+    await Queue.add(CancelationMail.key, {
+      appointment
     });
 
-    res.json(appointment);
+    const { id, canceledAt } = appointment;
+
+    res.json({ id, canceledAt });
   };
 }

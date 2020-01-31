@@ -5,9 +5,11 @@ import {
   Column,
   ManyToOne,
   PrimaryGeneratedColumn,
-  BaseEntity
+  BaseEntity,
+  AfterLoad
 } from "typeorm";
 import User from "./User";
+import { isBefore, subHours } from "date-fns";
 
 @Entity("appointments")
 export default class Appointment extends BaseEntity {
@@ -43,4 +45,16 @@ export default class Appointment extends BaseEntity {
     user => user.appointments
   )
   provider: User;
+
+  past: boolean;
+  @AfterLoad()
+  getPast() {
+    this.past = isBefore(this.date, new Date());
+  }
+
+  cancelable: boolean;
+  @AfterLoad()
+  getCancelable() {
+    this.cancelable = isBefore(new Date(), subHours(this.date, 2));
+  }
 }

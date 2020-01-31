@@ -2,6 +2,8 @@ import "reflect-metadata";
 import * as express from "express";
 import * as path from "path";
 import * as mongoose from "mongoose";
+import * as Sentry from "@sentry/node";
+import sentryConfig from "./app/config/sentry.config";
 import HttpException from "./app/exceptions/HttpException";
 import Controller from "./app/controllers/Controller";
 
@@ -12,6 +14,8 @@ class App {
   constructor(controllers: Controller[], port: number) {
     this.app = express();
     this.port = port;
+
+    Sentry.init(sentryConfig);
 
     this.middlewares();
     this.initializeControllers(controllers);
@@ -57,7 +61,7 @@ class App {
   }
 
   private mongoConnect() {
-    mongoose.connect("mongodb://localhost:27017/gobarger", {
+    mongoose.connect(process.env.MONGO_URL, {
       useNewUrlParser: true,
       useFindAndModify: true,
       useUnifiedTopology: true
