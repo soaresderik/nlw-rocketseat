@@ -3,16 +3,19 @@ import Controller from "./Controller";
 import validation from "../middlewares/validation.middleware";
 import HttpException from "../exceptions/HttpException";
 import auth from "../middlewares/auth.middleware";
-import { Response } from "express";
+import { Response, Request } from "express";
 import { IRequest } from "../interfaces/custom.interfaces";
 import { CreateAppoitmentDTO } from "./dto/appointment.dto";
-import { startOfHour, parseISO, isBefore, format } from "date-fns";
+import { startOfHour, parseISO, isBefore, format, subHours } from "date-fns";
 import * as pt from "date-fns/locale/pt";
 import { AppointmentRepository } from "../models/AppointmentRepository";
 import { UserRepository } from "../models/UserRepository";
 
 import Notification from "../schemas/Notification";
 import Appointment from "../../entity/Appointment";
+import AuthorizationException from "../exceptions/AuthorizationException";
+
+import Mail from "../../lib/Mail";
 
 export default class AppointmentController extends Controller {
   constructor(
@@ -25,6 +28,7 @@ export default class AppointmentController extends Controller {
   }
 
   private initializeRoutes() {
+    this.router.delete(`${this.path}/:id`, [auth], wrapper(this.delete));
     this.router.get(this.path, [auth], wrapper(this.index));
     this.router.post(
       this.path,
@@ -48,6 +52,9 @@ export default class AppointmentController extends Controller {
 
   public store = async (req: IRequest, res: Response) => {
     const { providerId, date } = req.body;
+
+    if (providerId === req.user.id)
+      throw new AuthorizationException("You can't do schedule for yourself.");
 
     const provider = await this.userRepository.findOneProvider(providerId);
 
@@ -84,6 +91,36 @@ export default class AppointmentController extends Controller {
     await Notification.create({
       content: `Novo agendamendo de ${req.user.name} para ${formattedDate}`,
       user: providerId
+    });
+
+    res.json(appointment);
+  };
+
+  public delete = async (req: IRequest, res: Response) => {
+    const appointment = await Appointment.findOne(req.params.id, {
+      relations: ["provider"]
+    });
+
+    if (appointment.userId !== req.user.id)
+      throw new AuthorizationException(
+        "You don't have permission to cancel this appointment."
+      );
+
+    const dateWithSub = subHours(appointment.date, 2);
+
+    if (isBefore(dateWithSub, new Date()))
+      throw new AuthorizationException(
+        "You can only cancel appintments 2 hours in advence."
+      );
+
+    appointment.canceledAt = new Date();
+
+    await appointment.save();
+
+    await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: "Angendamento Cancelado",
+      text: "Você tem um novo cancelamento"
     });
 
     res.json(appointment);

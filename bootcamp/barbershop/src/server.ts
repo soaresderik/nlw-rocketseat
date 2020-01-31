@@ -7,6 +7,7 @@ import FileController from "./app/controllers/FileController";
 import ProviderController from "./app/controllers/ProviderController";
 import AppointmentController from "./app/controllers/AppointmentController";
 import ScheduleController from "./app/controllers/ScheduleController";
+import NotificationController from "./app/controllers/NotificationController";
 
 (async () => {
   try {
@@ -33,7 +34,8 @@ import ScheduleController from "./app/controllers/ScheduleController";
       new FileController(),
       new ProviderController(),
       new AppointmentController(),
-      new ScheduleController()
+      new ScheduleController(),
+      new NotificationController()
     ],
     3333
   );
