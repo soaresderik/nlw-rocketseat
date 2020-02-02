@@ -8,7 +8,7 @@ import { IRequest } from "../interfaces/custom.interfaces";
 import { CreateAppoitmentDTO } from "./dto/appointment.dto";
 import { startOfHour, parseISO, isBefore, format, subHours } from "date-fns";
 import * as pt from "date-fns/locale/pt";
-import { AppointmentRepository } from "../models/AppointmentRepository";
+import AppointmentRepository from "../models/AppointmentRepository";
 import { UserRepository } from "../models/UserRepository";
 
 import Notification from "../schemas/Notification";

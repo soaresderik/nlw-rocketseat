@@ -3,6 +3,7 @@ import * as express from "express";
 import * as path from "path";
 import * as mongoose from "mongoose";
 import * as Sentry from "@sentry/node";
+import * as cors from "cors";
 import sentryConfig from "./app/config/sentry.config";
 import HttpException from "./app/exceptions/HttpException";
 import Controller from "./app/controllers/Controller";
@@ -25,6 +26,7 @@ class App {
 
   middlewares() {
     this.app.use(express.json());
+    this.app.use(cors());
     this.app.use(this.loggerMiddleware);
     this.app.use("/files", express.static(path.resolve("tmp", "uploads")));
   }

@@ -31,10 +31,10 @@ export default class User extends BaseEntity {
   @Column({ type: "bool", nullable: false, default: false })
   provider: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ select: false })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ select: false })
   updatedAt: Date;
 
   @OneToOne(

@@ -37,7 +37,10 @@ export default class SessionController extends Controller {
   public store = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      relations: ["avatar"]
+    });
 
     if (!user) throw new NotFoundException("User");
 
@@ -45,12 +48,19 @@ export default class SessionController extends Controller {
       throw new HttpException(401, "Não autorizado!");
 
     const { id, name } = user;
+    const avatar = user.avatar
+      ? {
+          id: user.avatar.id,
+          url: user.avatar.url
+        }
+      : null;
 
     return res.json({
       user: {
         id,
         name,
-        email
+        email,
+        avatar
       },
       token: await jwt.sign({ id }, authConfig.secret, {
         expiresIn: authConfig.expires

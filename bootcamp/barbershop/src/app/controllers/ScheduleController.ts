@@ -9,11 +9,10 @@ import AuthorizationException from "../exceptions/AuthorizationException";
 import Appointment from "../../entity/Appointment";
 import { startOfDay, endOfDay, parseISO } from "date-fns";
 import { Between } from "typeorm";
+import AppointmentRepository from "../models/AppointmentRepository";
 
 export default class ScheduleController extends Controller {
-  private userRepository = new UserRepository();
-
-  constructor() {
+  constructor(private appointmentRepo = new AppointmentRepository()) {
     super();
     this.path = "/schedule";
 
@@ -35,14 +34,10 @@ export default class ScheduleController extends Controller {
     const { date } = req.query;
     const parsedDate = parseISO(date);
 
-    const appointments = await Appointment.find({
-      where: {
-        providerId: req.user.id,
-        canceledAt: null,
-        date: Between(startOfDay(parsedDate), endOfDay(parsedDate))
-      },
-      order: { createdAt: "DESC" }
-    });
+    const appointments = await this.appointmentRepo.getScheduleByProviderId(
+      req.user.id,
+      parsedDate
+    );
 
     res.json({ appointments });
   };
