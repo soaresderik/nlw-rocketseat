@@ -30,6 +30,8 @@ export default class FileController extends Controller {
 
     const file = await File.create({ name, path }).save();
 
-    res.json(file);
+    const result = await File.findOne(file.id);
+
+    res.json(result);
   };
 }
