@@ -88,7 +88,8 @@ export default class AppointmentController extends Controller {
       "'dia' dd 'de' MMMM', às' H:mm'h'",
       { locale: pt }
     );
-    await Notification.create({
+
+    Notification.create({
       content: `Novo agendamendo de ${req.user.name} para ${formattedDate}`,
       user: providerId
     });

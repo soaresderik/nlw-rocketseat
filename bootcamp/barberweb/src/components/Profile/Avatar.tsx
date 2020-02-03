@@ -30,7 +30,7 @@ const Avatar: React.FC<IProp> = ({ name }) => {
     data.append("file", e.target.files[0]);
 
     const response = await authService.post("files", data);
-    console.log(response.data);
+
     const { id, url } = response.data;
     setFile(+id);
     setPreview(url);

@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNotEmpty, IsOptional } from "class-validator";
+import { IsString, IsEmail, IsNotEmpty, IsBoolean } from "class-validator";
 
 export default class UserDTO {
   @IsString()
@@ -13,4 +13,7 @@ export default class UserDTO {
   @IsString()
   @IsNotEmpty()
   public password: string;
+
+  @IsBoolean()
+  provider: boolean;
 }

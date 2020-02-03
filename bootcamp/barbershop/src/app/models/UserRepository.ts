@@ -10,8 +10,8 @@ export class UserRepository {
   constructor() {
     this._db = getRepository(User);
   }
-  async createUser({ name, email, password }: UserDTO) {
-    const user = await User.create({ name, email, password }).save();
+  async createUser({ name, email, password, provider }: UserDTO) {
+    const user = await User.create({ name, email, password, provider }).save();
 
     return user;
   }
